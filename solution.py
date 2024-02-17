@@ -138,8 +138,8 @@ class SolutionSMO1Reject:
         self.map["P_rej"] = P_1 = 1 - P_0
         self.map["A_nom"] = 1 / self.t
         self.map["nom"] = self.map["A_nom"] / self.map["A"]
-        self.simulate_process(self.k)
         self.result = reformat_result(self.map)
+        self.simulate_process(self.k)
 
 
 # sol = SolutionSMO1Reject([1.8, 1, 3])
