@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="{{url_for('static', filename='icon.ico')}}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TPR</title>
+    <script type="module" crossorigin src="{{url_for('static', filename='index.js')}}"></script>
+    <link rel="stylesheet" href="{{url_for('static', filename='index.css')}}">
+  </head>
+  <body>
+    <img src="{{url_for('static', filename='logo_2.svg')}}" 
+    style="
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      max-width: 300px;
+      margin: 0 auto;
+    ">
+    <div id="app"></div>
+  </body>
+</html>
