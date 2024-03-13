@@ -11,6 +11,7 @@ const stateShow = ref("")
     <VBtn value="Одноканальные СМО с ожиданием" @click="stateShow = '/api/solveSMO1Await'"/>
     <VBtn value="Одноканальные СМО с отказом" @click="stateShow = '/api/solveSMO1reject'" />
     <VBtn value="Многоканальные СМО с отказом" @click="stateShow = '/api/solveSMOMultiReject'"/>
+    <VBtn value="Многоканальные СМО с ожиданием" @click="stateShow = '/api/solveSMOMultiAwait'"/>
   </div>
   <SMO v-if="stateShow" :url="stateShow" @back="stateShow = ''"/>
 </div>

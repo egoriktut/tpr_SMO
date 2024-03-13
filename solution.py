@@ -3,6 +3,12 @@ import random
 import numpy as np
 
 
+def fac(n):
+    if n == 1 or n == 0:
+        return 1
+    return n * fac(n - 1)
+
+
 class KeysSMO(Enum):
     """
     Ключи для одноканальные СМО с ожиданием
@@ -21,6 +27,7 @@ class KeysSMO(Enum):
     T_aw = "Средняя продолжительность пребывания заявки в очереди"
     A_nom = "Номинальную пропускную способность системы"
     nom = "Отношение номинальной пропускной способности к фактической"
+    P_no_q = "Вероятность отсутствия очереди"
 
 
 def reformat_result(current_map):
@@ -159,25 +166,18 @@ class SolutionSMOMultiReject:
         self.map = {"P": []}
         self.result = []
 
-    def fac(self, n):
-        if n == 1 or n == 0:
-            return 1
-        return n * self.fac(n - 1)
-
     def solve(self):
         self.map["mu"] = 1 / self.t
         self.map["po"] = self.l / self.map["mu"]
         self.map["P"].append(
-            1 / sum([(self.map["po"] ** k) / self.fac(k) for k in range(self.n + 1)])
+            1 / sum([(self.map["po"] ** k) / fac(k) for k in range(self.n + 1)])
         )
         for i in range(1, self.n + 1):
-            self.map["P"].append(
-                (self.map["po"] ** i) * self.map["P"][0] / self.fac(i)
-            )
+            self.map["P"].append((self.map["po"] ** i) * self.map["P"][0] / fac(i))
         self.map["P_rej"] = self.map["P"][-1]
         P_rej = self.map["P_rej"]
         P_0 = self.map["P"][0]
-        
+
         for i in range(len(self.map["P"])):
             self.map["P"][i] = f"{round(self.map['P'][i] * 100, 3)}%"
         self.map["P_rej"] = f"{round(self.map['P_rej'] * 100, 3) }%"
@@ -188,11 +188,89 @@ class SolutionSMOMultiReject:
         self.result = reformat_result(self.map)
         n = 1
         while P_rej > 0.01:
-            P_0 = 1 / sum([(self.map["po"] ** k) / self.fac(k) for k in range(n + 1)])
-            P_rej = self.map["po"] ** n / self.fac(n) * P_0
-            self.result.append(f"n: {n}; P0: {round(P_0 * 100, 3)}%; P отказа: {round(P_rej * 100, 3)}%")
+            P_0 = 1 / sum([(self.map["po"] ** k) / fac(k) for k in range(n + 1)])
+            P_rej = self.map["po"] ** n / fac(n) * P_0
+            self.result.append(
+                f"n: {n}; P0: {round(P_0 * 100, 3)}%; P отказа: {round(P_rej * 100, 3)}%"
+            )
             n += 1
+
 
 # sol = SolutionSMOMultiReject([1.8, 1, 3])
 # sol.solve()
 # print(sol.result)
+
+
+class SolutionSMOMultiAwait:
+    """
+    Многоканальные СМО с ожиданием
+    """
+
+    def __init__(self, params) -> None:
+        self.t = params[0]
+        self.l = params[1]
+        self.n = params[2]
+        self.m = params[3]
+        self.is_inf = params[4]
+        self.map = {"P": [], "P_rej": 0, "q": 1, "A": self.l}
+
+        self.result = []
+
+    def solve(self):
+        self.map["mu"] = 1 / self.t
+        self.map["po"] = self.l / self.map["mu"]
+        if self.is_inf:
+            self.m = 500  # инфинити епт
+            self.map["P"].append(
+                1
+                / (
+                    sum([self.map["po"] ** i / fac(i) for i in range(self.n + 1)]) + 
+                    (self.map["po"] ** (self.n + 1)) / (fac(self.n) * (self.n - self.map["po"]))
+                )
+            )
+        else:
+            self.m = int(self.m)
+            self.map["P"].append(
+                1
+                / (
+                    sum([self.map["po"] ** k / fac(k) for k in range(self.n + 1)]) + 
+                    self.map["po"] ** self.n / fac(self.n) +
+                    sum([self.map["po"] ** s / self.n ** s for s in range(1, self.m + 1)])
+                )
+            )
+        for i in range(1, self.n + 2):
+            p_i = self.map["po"] ** i * self.map["P"][0] / fac(i)
+            self.map["P"].append(p_i)
+        self.map["P_no_q"] = sum(self.map["P"]) - self.map["P"][-1]
+        x = self.map["po"] / self.n
+        self.map["r_mid"] = (
+            (
+                self.map["po"] ** self.n
+                * self.map["P"][0]
+                / (self.n * fac(self.n))
+            )
+            * (1 - (self.m + 1) * x**self.m + self.m * x ** (self.m + 1))
+            / (1 - x) ** 2
+        )
+
+        self.map["k_mid"] = (
+            self.map["po"]
+            * (
+                1
+                - self.map["P"][0]
+                * self.map["po"] ** (self.n + self.m)
+                / self.n**self.m
+                / fac(self.n)
+            )
+            + self.map["r_mid"]
+        )
+        self.map["T_aw"] = self.map["r_mid"] / self.l
+        self.map["T_sys"] = self.map["T_aw"] + self.t
+        self.result = reformat_result(self.map)
+
+
+sol = SolutionSMOMultiAwait([0.5, 2.5, 3, 500, True])
+sol.solve()
+print(*sol.result, sep="\n")
+# p = 1.25
+# print(1 / (1 + p + p**2 / 2 + p**3 / 6 + p**4 / (6 * 1.75)))

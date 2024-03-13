@@ -14,21 +14,40 @@ const emit = defineEmits(["back"])
 const t = ref("")
 const l = ref("")
 const m = ref("")
+const n = ref("")
+const inf = ref(false)
 const info = ref("")
   
 const canFetch = computed(() => {
+  if (props.url === "/api/solveSMOMultiAwait") {
+    return (
+      t.value.replace(" ", "").length && l.value.replace(" ", "").length && m.value.replace(" ", "").length && n.value.replace(" ", "").length
+      ) || t.value.replace(" ", "").length && l.value.replace(" ", "").length && m.value.replace(" ", "").length && inf.value
+  };
   return t.value.replace(" ", "").length && l.value.replace(" ", "").length && m.value.replace(" ", "").length
 })
   
 const fetchData = () => {
-  const dataToSend = {
-    data: {
+  const data = ref("")
+  if (props.url === "/api/solveSMOMultiAwait") {
+    data.value = {
       t: t.value,
       l: l.value,
       m: m.value,
-    }
-  }
-  axios.post(props.url, dataToSend).then((response) => {
+      n: n.value,
+      inf: inf.value,
+    };
+  } else {
+    data.value = {
+      t: t.value,
+      l: l.value,
+      m: m.value,
+    };
+  };
+  axios.post(
+    props.url, 
+    { data: data.value },
+  ).then((response) => {
     info.value = response.data.msg
   })
 }
@@ -39,9 +58,22 @@ const fetchData = () => {
     <div class="container">
       <VInput v-model="t" holder="Среднее время обработки"></VInput>
       <VInput v-model="l" holder="Интенсивность"></VInput>
-      <VInput v-if="props.url === '/api/solveSMO1Await'" v-model="m" holder="Размер очереди"></VInput>
-      <VInput v-else-if="props.url === '/api/solveSMO1reject'" v-model="m" holder="Время симуляции (мин)"></VInput>
-      <VInput v-else-if="props.url === '/api/solveSMOMultiReject'" v-model="m" holder="Количество каналов"></VInput>
+      <VInput 
+        v-if="
+          props.url === '/api/solveSMO1Await' || props.url === '/api/solveSMOMultiAwait'
+        "
+        v-model="m" 
+        holder="Размер очереди" 
+      />
+      <VInput v-else-if="props.url === '/api/solveSMO1reject'" v-model="m" holder="Время симуляции (мин)" />
+      <VInput v-else-if="props.url === '/api/solveSMOMultiReject'" v-model="m" holder="Количество каналов" />
+      <VInput v-if="props.url === '/api/solveSMOMultiAwait'" v-model="n" holder="Количество каналов" />
+      <div v-if="props.url === '/api/solveSMOMultiAwait'" class="checkbox-container" @click="inf = !inf" >
+        <input v-model="inf" type="checkbox"/>
+        <p>Бесконечная очередь</p>
+      </div>
+
+
       <VBtn value="Проверить" @click="fetchData" :disable="!canFetch"></VBtn>
       <VBtn value="Назад" @click="emit('back')"></VBtn>
     </div>
@@ -56,7 +88,16 @@ const fetchData = () => {
 </template>
 
 <style scoped>
-  
+.checkbox-container {
+  display: flex;
+  gap: 20px;
+}
+
+.checkbox-container:hover {
+  cursor: pointer;
+}
+
+
 .main-container {
   display: flex;
   flex-wrap: wrap;
