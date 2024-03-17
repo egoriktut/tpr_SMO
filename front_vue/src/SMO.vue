@@ -17,12 +17,13 @@ const m = ref("")
 const n = ref("")
 const inf = ref(false)
 const info = ref("")
+
   
 const canFetch = computed(() => {
   if (props.url === "/api/solveSMOMultiAwait") {
     return (
       t.value.replace(" ", "").length && l.value.replace(" ", "").length && m.value.replace(" ", "").length && n.value.replace(" ", "").length
-      ) || t.value.replace(" ", "").length && l.value.replace(" ", "").length && m.value.replace(" ", "").length && inf.value
+      ) || t.value.replace(" ", "").length && l.value.replace(" ", "").length && n.value.replace(" ", "").length && inf.value
   };
   return t.value.replace(" ", "").length && l.value.replace(" ", "").length && m.value.replace(" ", "").length
 })
@@ -58,6 +59,7 @@ const fetchData = () => {
     <div class="container">
       <VInput v-model="t" holder="Среднее время обработки"></VInput>
       <VInput v-model="l" holder="Интенсивность"></VInput>
+      <VInput v-if="props.url === '/api/solveSMOMultiAwait'" v-model="n" holder="Количество каналов" />
       <VInput 
         v-if="
           props.url === '/api/solveSMO1Await' || props.url === '/api/solveSMOMultiAwait'
@@ -67,13 +69,10 @@ const fetchData = () => {
       />
       <VInput v-else-if="props.url === '/api/solveSMO1reject'" v-model="m" holder="Время симуляции (мин)" />
       <VInput v-else-if="props.url === '/api/solveSMOMultiReject'" v-model="m" holder="Количество каналов" />
-      <VInput v-if="props.url === '/api/solveSMOMultiAwait'" v-model="n" holder="Количество каналов" />
       <div v-if="props.url === '/api/solveSMOMultiAwait'" class="checkbox-container" @click="inf = !inf" >
         <input v-model="inf" type="checkbox"/>
         <p>Бесконечная очередь</p>
       </div>
-
-
       <VBtn value="Проверить" @click="fetchData" :disable="!canFetch"></VBtn>
       <VBtn value="Назад" @click="emit('back')"></VBtn>
     </div>
