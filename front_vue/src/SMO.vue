@@ -17,6 +17,7 @@ const m = ref("")
 const n = ref("")
 const inf = ref(false)
 const info = ref("")
+const imgInfo = ref("")
 
   
 const canFetch = computed(() => {
@@ -50,6 +51,10 @@ const fetchData = () => {
     { data: data.value },
   ).then((response) => {
     info.value = response.data.msg
+    if (props.url.includes("SMOMulti")) {
+      imgInfo.value = response.data.img
+    }
+    info.value = response.data.msg
   })
 }
 </script>
@@ -76,6 +81,7 @@ const fetchData = () => {
       <VBtn value="Проверить" @click="fetchData" :disable="!canFetch"></VBtn>
       <VBtn value="Назад" @click="emit('back')"></VBtn>
     </div>
+    
     <div v-if="info" style="min-width: 650px;">
       <div class="preview-message">
         <div v-for="i in info">
@@ -83,12 +89,14 @@ const fetchData = () => {
         </div>
       </div>
     </div>
+    <img v-if="imgInfo" :src="imgInfo" style="display: flex; justify-content: center; object-fit: none; object-position: 0px -180px;">
   </div>
 </template>
 
 <style scoped>
 .checkbox-container {
   display: flex;
+  justify-content: center;
   gap: 20px;
 }
 

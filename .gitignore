@@ -20,6 +20,9 @@ coverage
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
+*__pycache__/*
+dist
+node_modules
 .idea
 *.suo
 *.ntvs*

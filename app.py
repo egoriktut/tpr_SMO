@@ -42,7 +42,7 @@ def solve_smo_multi_reject():
     params = request.json["data"]
     sol = SolutionSMOMultiReject([float(params["t"]), float(params["l"]), int(params["m"])])
     sol.solve()
-    return {"msg": sol.result}
+    return {"msg": sol.result, "img": sol.img}
 
 @app.route('/api/solveSMOMultiAwait', methods=['POST'])
 def solve_smo_multi_await():
@@ -50,10 +50,9 @@ def solve_smo_multi_await():
     Многоканальная СМО с ожиданием
     """
     params = request.json["data"]
-
-    sol = SolutionSMOMultiAwait([float(params["t"]), float(params["l"]), int(params["m"]),  params["n"], bool(params["inf"])])
+    sol = SolutionSMOMultiAwait([float(params["t"]), float(params["l"]), int(params["n"]),  params["m"], bool(params["inf"])])
     sol.solve()
-    return {"msg": sol.result}
+    return {"msg": sol.result, "img": sol.img}
 
 FlaskUI(app=app, server="flask", width=700, height=700).run()
 

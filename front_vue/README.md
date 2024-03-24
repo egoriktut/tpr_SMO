@@ -1,14 +1,4 @@
-# lec3
-
-This template should help get you started developing with Vue 3 in Vite.
-
-## Recommended IDE Setup
-
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur) + [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin).
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vitejs.dev/config/).
+# lec_tpr_SMO
 
 ## Project Setup
 
@@ -16,14 +6,30 @@ See [Vite Configuration Reference](https://vitejs.dev/config/).
 npm install
 ```
 
-### Compile and Hot-Reload for Development
+### cd front dir
 
 ```sh
-npm run dev
+cd front_vue
 ```
 
-### Compile and Minify for Production
+### compile front files
 
 ```sh
-npm run build
+./upload.sh
 ```
+
+### compile front files
+
+```sh
+cd ..
+```
+
+```sh
+flask --app app.py run
+```
+
+## ENJOY
+
+### EXE
+
+While you complete build exe, put 3 template .png to dir with exe

@@ -1,7 +1,10 @@
 from enum import Enum
 import random
 import numpy as np
-
+import matplotlib.pyplot as plt
+from PIL import Image
+import base64
+import os
 
 def fac(n):
     if n == 1 or n == 0:
@@ -29,6 +32,48 @@ class KeysSMO(Enum):
     nom = "Nom (Отношение номинальной пропускной способности к фактической)"
     P_no_q = "P от.оч (Вероятность отсутствия очереди)"
 
+def draw_multi_reject(n, k):
+    image = Image.open('smo_multi_reject_template.png')
+    fig, ax = plt.subplots()
+    ax.imshow(image)
+    ax.text(1018, 82, f'{n}', fontsize=8, color='black')
+    plt.savefig('smo_multi_reject.png')
+    result = ""
+    with open("smo_multi_reject.png", "rb") as file:
+        img = file.read()
+        result = f"data:image/png;base64,{base64.b64encode(img).decode('utf-8')}"
+    os.remove("smo_multi_reject.png")
+    return result
+
+
+def draw_multi_await(n, m):
+    image = Image.open('smo_multi_await_template.png')
+    fig, ax = plt.subplots()
+    ax.imshow(image)
+    ax.text(555, 82, f'{n}', fontsize=8, color='black')
+    ax.text(757, 82, f'{n}+{m}', fontsize=8, color='black')
+    plt.savefig('smo_multi_await.png')
+    result = ""
+    with open("smo_multi_await.png", "rb") as file:
+        img = file.read()
+        result = f"data:image/png;base64,{base64.b64encode(img).decode('utf-8')}"
+    os.remove("smo_multi_await.png")
+    return result
+
+def draw_multi_await_inf(n, m):
+    image = Image.open('smo_multi_await_inf_template.png')
+    fig, ax = plt.subplots()
+    ax.imshow(image)
+    ax.text(532, 60, f'{n}', fontsize=8, color='black')
+    ax.text(720, 70, f'{n}+{m}', fontsize=7, color='black')
+    plt.savefig('smo_multi_await_inf.png')
+    result = ""
+    with open("smo_multi_await_inf.png", "rb") as file:
+        img = file.read()
+        result = f"data:image/png;base64,{base64.b64encode(img).decode('utf-8')}"
+    os.remove("smo_multi_await_inf.png")
+    return result
+    
 
 def reformat_result(current_map):
     """
@@ -136,13 +181,14 @@ class SolutionSMO1Reject:
         self.result.append(f"Поступило: {post}")
         self.result.append(f"Обслужено: {obsl}")
         self.result.append(f"Отказано: {otk}")
-        self.result.append(f"В среднем: {obsl / (k / 60)}")
+        self.result.append(f"В среднем: {round(obsl / (k / 60), 3)}")
 
     def solve(self):
         self.map["mu"] = 1 / self.t
         self.map["q"] = P_0 = self.map["mu"] / (self.map["mu"] + self.l)
         self.map["A"] = self.l * self.map["q"]
         self.map["P_rej"] = P_1 = 1 - P_0
+        self.map["P_rej"] = round(self.map["P_rej"], 3)
         self.map["A_nom"] = 1 / self.t
         self.map["nom"] = self.map["A_nom"] / self.map["A"]
         self.result = reformat_result(self.map)
@@ -165,6 +211,7 @@ class SolutionSMOMultiReject:
         self.n = params[2]
         self.map = {"P": []}
         self.result = []
+        self.img = ""
 
     def solve(self):
         self.map["mu"] = 1 / self.t
@@ -194,7 +241,7 @@ class SolutionSMOMultiReject:
                 f"n: {n}; P0: {round(P_0 * 100, 3)}%; P отказа: {round(P_rej * 100, 3)}%"
             )
             n += 1
-
+        self.img = draw_multi_reject(self.n, self.map["k_mid"])
 
 # sol = SolutionSMOMultiReject([1.8, 1, 3])
 # sol.solve()
@@ -213,34 +260,34 @@ class SolutionSMOMultiAwait:
         self.m = params[3]
         self.is_inf = params[4]
         self.map = {"P": [], "P_rej": 0, "q": 1, "A": self.l}
-
         self.result = []
+        self.img = ""
 
     def solve(self):
         self.map["mu"] = 1 / self.t
         self.map["po"] = self.l / self.map["mu"]
         if self.is_inf:
             self.m = 500  # инфинити епт
-            self.map["P"].append(
+            self.map["P"].append(round(
                 1
                 / (
                     sum([self.map["po"] ** i / fac(i) for i in range(self.n + 1)]) + 
                     (self.map["po"] ** (self.n + 1)) / (fac(self.n) * (self.n - self.map["po"]))
-                )
+                ), 3)
             )
         else:
             self.m = int(self.m)
             self.map["P"].append(
-                1
+                round(1
                 / (
                     sum([self.map["po"] ** k / fac(k) for k in range(self.n + 1)]) + 
                     self.map["po"] ** self.n / fac(self.n) +
                     sum([self.map["po"] ** s / self.n ** s for s in range(1, self.m + 1)])
-                )
+                ), 3)
             )
         for i in range(1, self.n + 2):
             p_i = self.map["po"] ** i * self.map["P"][0] / fac(i)
-            self.map["P"].append(p_i)
+            self.map["P"].append(round(p_i, 3))
         self.map["P_no_q"] = sum(self.map["P"]) - self.map["P"][-1]
         x = self.map["po"] / self.n
         self.map["r_mid"] = (
@@ -267,10 +314,16 @@ class SolutionSMOMultiAwait:
         self.map["T_aw"] = self.map["r_mid"] / self.l
         self.map["T_sys"] = self.map["T_aw"] + self.t
         self.result = reformat_result(self.map)
+        if self.is_inf:
+            self.img = draw_multi_await_inf(self.n, self.m)
+        else:
+            self.img = draw_multi_await(self.n, self.m)
 
 
-sol = SolutionSMOMultiAwait([0.5, 2.5, 3, 500, True])
-sol.solve()
-print(*sol.result, sep="\n")
+
+# sol = SolutionSMOMultiAwait([0.5, 2.5, 3, 500, True])
+# sol.solve()
+# print(*sol.result, sep="\n")
 # p = 1.25
 # print(1 / (1 + p + p**2 / 2 + p**3 / 6 + p**4 / (6 * 1.75)))
+
