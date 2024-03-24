@@ -2,14 +2,16 @@
 
 ## Project Setup
 
-```sh
-npm install
-```
-
 ### cd front dir
 
 ```sh
 cd front_vue
+```
+
+### install dependencies 
+
+```sh
+npm install
 ```
 
 ### compile front files
